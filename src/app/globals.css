@@ -1,0 +1,349 @@
+@import url("https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap");
+
+:root {
+  --bg: #1a1210;
+  --panel: rgba(28, 22, 18, 0.92);
+  --ink: #f0e6d4;
+  --muted: #b8a890;
+  --accent: #c4121a;
+  --line: #6a5040;
+  --focus: #e8c070;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+}
+
+.app-shell {
+  position: relative;
+  width: 100vw;
+  height: 100dvh;
+}
+
+.loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-family: "Libre Baskerville", Georgia, serif;
+}
+
+.hud {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  right: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.brand-mark {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+}
+
+.brand {
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  letter-spacing: 0.12em;
+  font-weight: 700;
+}
+
+.product {
+  font-size: 0.75rem;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.xr-button,
+.panel-toggle,
+.control-panel button,
+.warning-card button {
+  pointer-events: auto;
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  padding: 0.45rem 0.85rem;
+  border-radius: 2px;
+}
+
+.xr-button:hover,
+.panel-toggle:hover,
+.control-panel button:hover {
+  border-color: var(--focus);
+}
+
+.panel-toggle {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 20;
+}
+
+.control-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(360px, 100%);
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+  padding: 1.25rem;
+  overflow-y: auto;
+  transform: translateX(105%);
+  transition: transform 0.28s ease;
+  z-index: 15;
+  backdrop-filter: blur(8px);
+}
+
+.control-panel.open {
+  transform: translateX(0);
+}
+
+.control-panel.hc {
+  background: #000;
+  color: #fff;
+  border-color: #fff;
+}
+
+.control-panel h1 {
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 1.25rem;
+  margin: 0 0 0.25rem;
+}
+
+.control-panel .sub {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.control-panel h2 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 1rem 0 0.5rem;
+}
+
+.control-panel section {
+  border-bottom: 1px solid rgba(106, 80, 64, 0.4);
+  padding-bottom: 0.75rem;
+}
+
+.control-panel .row {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: nowrap;
+}
+
+.control-panel .row.wrap {
+  flex-wrap: wrap;
+}
+
+.control-panel .field {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.control-panel select,
+.control-panel input[type="range"] {
+  width: 100%;
+  cursor: pointer;
+}
+
+.control-panel input[type="range"] {
+  cursor: grab;
+}
+
+.control-panel input[type="range"]:active {
+  cursor: grabbing;
+}
+
+.control-panel .check {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  margin: 0.35rem 0;
+  cursor: pointer;
+}
+
+.control-panel .check.inline {
+  margin: 0;
+}
+
+.control-panel button.primary {
+  background: var(--accent);
+  border-color: #8a1015;
+  width: 100%;
+}
+
+.control-panel .file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.control-panel .media-dropzone {
+  position: relative;
+  border: 1px dashed var(--line);
+  padding: 0.75rem;
+  margin-top: 0.35rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.control-panel .media-dropzone.active {
+  border-color: var(--accent);
+  color: var(--ink);
+  background: rgba(196, 18, 26, 0.12);
+}
+
+.control-panel .media-dropzone .primary {
+  margin-top: 0.5rem;
+}
+
+.control-panel .upload-error {
+  color: #ff6b6b;
+  font-size: 0.8rem;
+  margin: 0.4rem 0 0;
+}
+
+.control-panel .user-video-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.control-panel .user-video-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  border: 1px solid var(--line);
+  padding: 0.4rem 0.5rem;
+}
+
+.control-panel .user-media-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.control-panel .user-media-meta small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.control-panel .user-media-poster {
+  width: 40px;
+  height: 28px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #111;
+}
+
+.control-panel .user-video-list button {
+  padding: 0.25rem 0.45rem;
+  font-size: 0.75rem;
+}
+
+.control-panel button:focus-visible,
+.panel-toggle:focus-visible,
+.xr-button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.sr-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.warning-modal {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: grid;
+  place-items: center;
+  z-index: 40;
+}
+
+.warning-card {
+  background: #2a2218;
+  border: 1px solid var(--line);
+  padding: 1.25rem;
+  max-width: 360px;
+  width: calc(100% - 2rem);
+}
+
+.warning-card h2 {
+  font-family: "Libre Baskerville", Georgia, serif;
+  margin-top: 0;
+}
+
+@media (max-width: 720px) {
+  .control-panel {
+    top: auto;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 55dvh;
+    border-left: none;
+    border-top: 1px solid var(--line);
+    transform: translateY(110%);
+    border-radius: 12px 12px 0 0;
+  }
+  .control-panel.open {
+    transform: translateY(0);
+  }
+  .panel-toggle {
+    bottom: 1rem;
+    right: 50%;
+    transform: translateX(50%);
+  }
+  .brand {
+    font-size: 1.1rem;
+  }
+}

@@ -1,0 +1,170 @@
+import type { ControlSpec } from "@/types";
+
+/** Named control registry specs for pointer / XR / keyboard systems. */
+export const CONTROL_SPECS: ControlSpec[] = [
+  {
+    id: "power",
+    kind: "button",
+    label: "Power",
+    meshName: "PowerButton",
+  },
+  {
+    id: "mainKnob",
+    kind: "knob",
+    label: "Power / channel selector",
+    meshName: "MainRedKnob",
+    min: 0,
+    max: 9,
+    detents: 10,
+  },
+  {
+    id: "previewBtn1",
+    kind: "button",
+    label: "Promote preview 1",
+    meshName: "PreviewButton01",
+    screenId: "preview1",
+  },
+  {
+    id: "previewBtn2",
+    kind: "button",
+    label: "Promote preview 2",
+    meshName: "PreviewButton02",
+    screenId: "preview2",
+  },
+  {
+    id: "previewBtn3",
+    kind: "button",
+    label: "Promote preview 3",
+    meshName: "PreviewButton03",
+    screenId: "preview3",
+  },
+  {
+    id: "sliderBrightness",
+    kind: "slider",
+    label: "Brightness",
+    meshName: "Slider01",
+    min: 0.2,
+    max: 1,
+    axis: "y",
+    travel: 0.06,
+  },
+  {
+    id: "sliderContrast",
+    kind: "slider",
+    label: "Contrast",
+    meshName: "Slider02",
+    min: 0.2,
+    max: 1.2,
+    axis: "y",
+    travel: 0.06,
+  },
+  {
+    id: "sliderSaturation",
+    kind: "slider",
+    label: "Saturation",
+    meshName: "Slider03",
+    min: 0,
+    max: 1,
+    axis: "y",
+    travel: 0.06,
+  },
+  {
+    id: "sliderTuning",
+    kind: "slider",
+    label: "Fine tuning",
+    meshName: "Slider04",
+    min: 0,
+    max: 1,
+    axis: "y",
+    travel: 0.06,
+  },
+  {
+    id: "sliderVolume",
+    kind: "slider",
+    label: "Volume",
+    meshName: "Slider05",
+    min: 0,
+    max: 1,
+    axis: "y",
+    travel: 0.06,
+  },
+  {
+    id: "sliderPreview",
+    kind: "slider",
+    label: "Preview level",
+    meshName: "Slider06",
+    min: 0,
+    max: 1,
+    axis: "y",
+    travel: 0.06,
+  },
+  {
+    id: "switchLock",
+    kind: "switch",
+    label: "Assignment lock",
+    meshName: "LockSwitch",
+  },
+  {
+    id: "switchPreviews",
+    kind: "switch",
+    label: "Preview screens",
+    meshName: "ToggleSwitch2",
+  },
+  {
+    id: "secondaryKnob1",
+    kind: "button",
+    label: "Preview 1 source",
+    meshName: "SecondaryKnob1",
+    screenId: "preview1",
+  },
+  {
+    id: "secondaryKnob2",
+    kind: "button",
+    label: "Preview 2 source",
+    meshName: "SecondaryKnob2",
+    screenId: "preview2",
+  },
+  {
+    id: "secondaryKnob3",
+    kind: "button",
+    label: "Preview 3 source",
+    meshName: "SecondaryKnob3",
+    screenId: "preview3",
+  },
+  {
+    id: "screenMain",
+    kind: "screen",
+    label: "Main CRT",
+    meshName: "MainCRTGlass",
+    screenId: "main",
+  },
+  {
+    id: "screenP1",
+    kind: "screen",
+    label: "Preview CRT 1",
+    meshName: "PreviewCRT01",
+    screenId: "preview1",
+  },
+  {
+    id: "screenP2",
+    kind: "screen",
+    label: "Preview CRT 2",
+    meshName: "PreviewCRT02",
+    screenId: "preview2",
+  },
+  {
+    id: "screenP3",
+    kind: "screen",
+    label: "Preview CRT 3",
+    meshName: "PreviewCRT03",
+    screenId: "preview3",
+  },
+];
+
+export function getControlById(id: string): ControlSpec | undefined {
+  return CONTROL_SPECS.find((c) => c.id === id);
+}
+
+export function getControlByMesh(meshName: string): ControlSpec | undefined {
+  return CONTROL_SPECS.find((c) => c.meshName === meshName);
+}

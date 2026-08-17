@@ -1,0 +1,69 @@
+import { describe, expect, it } from "vitest";
+import {
+  accumulateKnobAngle,
+  knobRawFromAngleDelta,
+  knobRotationForValue,
+  knobValueFromAngleDelta,
+  knobValueFromDelta,
+  pointerAngle,
+  shortestAngleDelta,
+  sliderValueFromDelta,
+  KNOB_FULL_TRAVEL,
+} from "@/systems/interaction/pointer";
+import { cycleControlId, parseKeyAction } from "@/systems/interaction/keyboard";
+
+describe("pointer math", () => {
+  it("maps knob drag to detents", () => {
+    const v = knobValueFromDelta(0, 200, 0, 7, 8, 0.02);
+    expect(v).toBeGreaterThan(0);
+  });
+
+  it("maps clockwise angle drag to higher detents", () => {
+    const quarter = KNOB_FULL_TRAVEL / 3;
+    const v = knobValueFromAngleDelta(0, quarter, 0, 9, 10);
+    expect(v).toBeGreaterThan(0);
+    expect(knobRawFromAngleDelta(0, quarter, 0, 9)).toBeCloseTo(3, 5);
+  });
+
+  it("rotates dial clockwise for higher values", () => {
+    expect(knobRotationForValue(0, 0, 9)).toBeCloseTo(0);
+    expect(knobRotationForValue(9, 0, 9)).toBeCloseTo(-KNOB_FULL_TRAVEL);
+    expect(knobRotationForValue(9, 0, 9)).toBeLessThan(knobRotationForValue(0, 0, 9));
+  });
+
+  it("accumulates turn across the ±π seam without resetting", () => {
+    let last = 2.8;
+    let accum = 0;
+    // step clockwise across the seam
+    ({ lastAngle: last, angleAccum: accum } = accumulateKnobAngle(last, -2.8, accum));
+    expect(accum).toBeGreaterThan(0);
+    expect(accum).toBeLessThan(1);
+  });
+
+  it("unwraps angle deltas across the ±π seam", () => {
+    expect(Math.abs(shortestAngleDelta(2.9, -2.9))).toBeLessThan(1);
+  });
+
+  it("computes pointer angles", () => {
+    expect(pointerAngle(110, 100, 100, 100)).toBeCloseTo(0);
+    expect(pointerAngle(100, 110, 100, 100)).toBeCloseTo(Math.PI / 2);
+  });
+
+  it("clamps slider values", () => {
+    expect(sliderValueFromDelta(0.5, 1000, 0, 1)).toBe(0);
+    expect(sliderValueFromDelta(0.5, -1000, 0, 1)).toBe(1);
+  });
+});
+
+describe("keyboard", () => {
+  it("parses camera presets", () => {
+    const ev = { key: "1", shiftKey: false, target: null } as unknown as KeyboardEvent;
+    expect(parseKeyAction(ev)).toEqual({ type: "cameraPreset", preset: "front" });
+  });
+
+  it("cycles controls", () => {
+    const a = cycleControlId(null, 1);
+    const b = cycleControlId(a, 1);
+    expect(a).not.toBe(b);
+  });
+});
