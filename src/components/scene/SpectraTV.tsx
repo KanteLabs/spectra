@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { ThreeEvent, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import gsap from "gsap";
@@ -302,9 +302,9 @@ export function SpectraTV() {
   const raycaster = useMemo(() => new THREE.Raycaster(), []);
   const ndc = useMemo(() => new THREE.Vector2(), []);
 
-  const setSceneCursor = (cursor: string) => {
+  const setSceneCursor = useCallback((cursor: string) => {
     cursorTarget.style.cursor = cursor;
-  };
+  }, [cursorTarget]);
 
   const modelRef = useRef<SpectraModelResult | null>(null);
   const materialsRef = useRef<Record<ScreenId, THREE.ShaderMaterial> | null>(
@@ -335,7 +335,12 @@ export function SpectraTV() {
   const mainDepthEffect = useUiStore((s) => s.mainDepthEffect);
   const cameraPreset = useUiStore((s) => s.cameraPreset);
 
-  const model = useMemo(() => buildSpectraModel(), [CRT_ASSEMBLY_REV]);
+  // CRT_ASSEMBLY_REV is a module constant; listing it rebuilds glass/bezels on HMR.
+  const model = useMemo(
+    () => buildSpectraModel(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- assembly rev is an HMR bust key
+    [CRT_ASSEMBLY_REV]
+  );
 
   useEffect(() => {
     modelRef.current = model;
@@ -996,7 +1001,7 @@ export function SpectraTV() {
       window.removeEventListener("pointerup", endDrag);
       window.removeEventListener("pointercancel", endDrag);
     };
-  }, [controlsRef, cursorTarget]);
+  }, [controlsRef, cursorTarget, setSceneCursor]);
 
   useEffect(() => {
     model.root.userData.activateControl = activateControl;
@@ -1030,7 +1035,7 @@ export function SpectraTV() {
       el.removeEventListener("pointerleave", onLeave);
       el.style.cursor = "auto";
     };
-  }, [camera, cursorTarget, model, ndc, raycaster]);
+  }, [camera, cursorTarget, model, ndc, raycaster, setSceneCursor]);
 
   const screenMeshes = useMemo(
     () => [

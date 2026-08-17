@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { crtVertexShader, CRT_VERT_REV } from "./crt.vert";
-import { crtFragmentShader, CRT_FRAG_REV } from "./crt.frag";
+import { crtVertexShader } from "./crt.vert";
+import { crtFragmentShader } from "./crt.frag";
 import type { QualityLevel } from "@/types";
 import { QUALITY_CONFIGS, type CrtQualityProfile } from "@/systems/quality/qualityConfig";
 

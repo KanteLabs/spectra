@@ -385,7 +385,8 @@ export function ControlPanel() {
                 <li key={s.id}>
                   <span className="user-media-meta">
                     {s.posterUrl ? (
-                      // Poster from upload pipeline (blob URL)
+                      // Blob posters from local uploads — next/image cannot optimize these.
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={s.posterUrl}
                         alt=""
