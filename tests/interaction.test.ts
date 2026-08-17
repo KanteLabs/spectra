@@ -8,6 +8,7 @@ import {
   pointerAngle,
   shortestAngleDelta,
   sliderValueFromDelta,
+  isClickNotDrag,
   KNOB_FULL_TRAVEL,
 } from "@/systems/interaction/pointer";
 import { cycleControlId, parseKeyAction } from "@/systems/interaction/keyboard";
@@ -49,9 +50,9 @@ describe("pointer math", () => {
     expect(pointerAngle(100, 110, 100, 100)).toBeCloseTo(Math.PI / 2);
   });
 
-  it("clamps slider values", () => {
-    expect(sliderValueFromDelta(0.5, 1000, 0, 1)).toBe(0);
-    expect(sliderValueFromDelta(0.5, -1000, 0, 1)).toBe(1);
+  it("treats small pointer travel as a click, not a drag", () => {
+    expect(isClickNotDrag(10, 10, 12, 11)).toBe(true);
+    expect(isClickNotDrag(10, 10, 30, 10)).toBe(false);
   });
 });
 

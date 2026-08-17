@@ -39,6 +39,19 @@ export function createPointerCapture(): PointerCaptureState {
 /** Full mechanical travel of the main channel knob (radians). */
 export const KNOB_FULL_TRAVEL = Math.PI * 1.5;
 
+/** Pointer travel above this is an orbit/drag, not a CRT click. */
+export const CLICK_DRAG_SLOP_PX = 8;
+
+export function isClickNotDrag(
+  startX: number,
+  startY: number,
+  x: number,
+  y: number,
+  slopPx = CLICK_DRAG_SLOP_PX
+): boolean {
+  return Math.hypot(x - startX, y - startY) <= slopPx;
+}
+
 /** Screen-space angle from pivot to pointer (y-down coords; increases clockwise). */
 export function pointerAngle(
   clientX: number,

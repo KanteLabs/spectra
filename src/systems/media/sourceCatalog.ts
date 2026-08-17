@@ -10,14 +10,28 @@ import { buildChannelBankIds } from "./playbackPolicy";
 export const SOURCE_CATALOG: SourceDefinition[] = [
   {
     id: "newsroom",
-    label: "Abendschau Newsdesk",
+    label: "Moiré Interferenz",
     kind: "procedural",
     hasAudio: false,
     colorAmount: 1,
   },
   {
     id: "weather",
-    label: "Wetterkarte",
+    label: "Rechnergrafik",
+    kind: "procedural",
+    hasAudio: false,
+    colorAmount: 1,
+  },
+  {
+    id: "starfield",
+    label: "Sternentunnel",
+    kind: "procedural",
+    hasAudio: false,
+    colorAmount: 1,
+  },
+  {
+    id: "automata",
+    label: "Zellautomat",
     kind: "procedural",
     hasAudio: false,
     colorAmount: 1,

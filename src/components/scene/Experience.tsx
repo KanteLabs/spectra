@@ -15,6 +15,7 @@ import { XR } from "@react-three/xr";
 import { SpectraTV } from "./SpectraTV";
 import { CameraRig } from "./CameraRig";
 import { CAMERA_PRESET_MS } from "@/systems/camera/mainCrtFraming";
+import { FRONT_VIEW } from "@/systems/camera/orbitLimits";
 import { SceneEnvironment } from "./SceneEnvironment";
 import { XRRig } from "./XRRig";
 import { CinemaView } from "./CinemaView";
@@ -150,7 +151,7 @@ export function Experience() {
           toneMapping: THREE.ACESFilmicToneMapping,
           preserveDrawingBuffer: true,
         }}
-        camera={{ position: [0, 1.12, 1.68], fov: 40, near: 0.05, far: 40 }}
+        camera={{ position: FRONT_VIEW.position, fov: 40, near: 0.05, far: 40 }}
         style={{ position: "absolute", inset: 0 }}
         onCreated={({ gl }) => {
           gl.toneMappingExposure =

@@ -31,7 +31,8 @@ Agent-facing contract for Nordmende Spectra. Prefer changing code to match these
 
 ## Camera
 
-- Main CRT click toggles `mainCrt` preset. Distance is **contain-fitted** from canvas aspect + camera FOV so the outer bezel lines up with the viewport (no fixed-z over-zoom on wide/tall resolutions). Esc / click again returns to `front`. Zoom enter/leave batches preset + focus in one store update (`setMainCrtZoom`) so the camera tween does not restart. Soft-focus and DoF bokeh **ease** with the preset duration (never remount DepthOfField / rebuild EffectComposer). While zoomed, the camera is **level-locked** (`up = +Y`, orbit rotate off) so the bezel stays square to the browser. Zoom-out skips `OrbitControls.update()` until the ease completes (stale spherical was causing a pre-tween jump).
+- Main CRT **left-click tap** toggles `mainCrt` preset (a press that then slides is an orbit; right-click is pan — neither zooms). Distance is **contain-fitted** from canvas aspect + camera FOV so the outer bezel lines up with the viewport (no fixed-z over-zoom on wide/tall resolutions). Esc / click again returns to `front`. Zoom enter/leave batches preset + focus in one store update (`setMainCrtZoom`) so the camera tween does not restart. Soft-focus and DoF bokeh **ease** with the preset duration (never remount DepthOfField / rebuild EffectComposer). While zoomed, the camera is **level-locked** (`up = +Y`, orbit rotate off) so the bezel stays square to the browser. Zoom-out skips `OrbitControls.update()` until the ease completes (stale spherical was causing a pre-tween jump).
+- Free orbit from **front** is clamped to about **±60°** yaw/pitch around the starting pose and cannot dolly farther out than that framing. Rotate speed is half of OrbitControls default. After an orbit or pan ends, the camera eases back to the centered front view. Side / rear / top / iso presets lift the cone so inspection still works.
 - Animate **camera position and OrbitControls target together**. Never snap `target` prop while position eases (causes jump-then-zoom). Do not put canvas `size` in the same effect as the preset tween.
 
 ## Controls
@@ -63,5 +64,6 @@ Agent-facing contract for Nordmende Spectra. Prefer changing code to match these
 - `tests/sourceUpdatePolicy.test.ts` — off-screen canvas channels are skipped, cheap updates are not.
 - `tests/screenRouter.test.ts`, `tests/tvStore.test.ts`, `tests/interaction.test.ts`.
 - `tests/mainCrtFraming.test.ts` — main CRT zoom contain-fits bezel to canvas aspect.
+- `tests/orbitLimits.test.ts` — front orbit ±60° cone; starting distance is max zoom-out.
 
 If you change an invariant, update this file and the matching test in the same change.

@@ -36,6 +36,7 @@ import {
   knobValueFromAngleDelta,
   pointerAngle,
   sliderValueFromDelta,
+  isClickNotDrag,
   KNOB_ANGLE_DEADZONE_PX,
   KNOB_FULL_TRAVEL,
 } from "@/systems/interaction/pointer";
@@ -314,6 +315,13 @@ export function SpectraTV() {
     typeof createProductOrbitSource
   > | null>(null);
   const capture = useRef(createPointerCapture());
+  /** CRT glass: wait for pointer-up so a drag can orbit instead of zoom/promote. */
+  const pendingScreenClick = useRef<{
+    controlId: string;
+    startX: number;
+    startY: number;
+    pointerId: number;
+  } | null>(null);
   /** Ids on powered CRTs; recomputed on screen changes, read every frame. */
   const visibleIdsRef = useRef<ReadonlySet<string>>(EMPTY_IDS);
   const controlsRef = useThree((s) => s.controls) as unknown as {
@@ -413,6 +421,8 @@ export function SpectraTV() {
     mgr.ensureFallback();
     void mgr.ensure("newsroom");
     void mgr.ensure("weather");
+    void mgr.ensure("starfield");
+    void mgr.ensure("automata");
     void mgr.ensure("sports");
     void mgr.ensure("variety");
     void mgr.ensure("stationId");
@@ -765,6 +775,9 @@ export function SpectraTV() {
     }
   };
 
+  const activateControlRef = useRef(activateControl);
+  activateControlRef.current = activateControl;
+
   const applyPictureValue = (id: string, v: number) => {
     const store = useTvStore.getState();
     switch (id) {
@@ -793,6 +806,9 @@ export function SpectraTV() {
   };
 
   const onPointerDown = (e: ThreeEvent<PointerEvent>) => {
+    // OrbitControls: left = rotate, right = pan. Don't steal those for zoom.
+    if (e.button !== 0) return;
+
     clientToNdc(cursorTarget, e.clientX, e.clientY, ndc);
     const controlId = pickControlId(
       raycaster,
@@ -801,10 +817,22 @@ export function SpectraTV() {
       interactiveObjects(model)
     );
     if (!controlId) return;
-    e.stopPropagation();
 
     const spec = CONTROL_SPECS.find((c) => c.id === controlId);
     if (!spec) return;
+
+    // Glass is huge — a press+slide is orbit, a tap still zooms / promotes.
+    if (spec.kind === "screen") {
+      pendingScreenClick.current = {
+        controlId,
+        startX: e.clientX,
+        startY: e.clientY,
+        pointerId: e.pointerId,
+      };
+      return;
+    }
+
+    e.stopPropagation();
 
     if (controlsRef) controlsRef.enabled = false;
 
@@ -886,7 +914,7 @@ export function SpectraTV() {
       }
     }
 
-    if (spec.kind === "button" || spec.kind === "switch" || spec.kind === "screen") {
+    if (spec.kind === "button" || spec.kind === "switch") {
       activateControl(controlId);
       const btn = modelRef.current?.controls.get(controlId);
       if (btn && spec.kind === "button") {
@@ -974,6 +1002,17 @@ export function SpectraTV() {
     };
 
     const endDrag = (e: PointerEvent) => {
+      const pending = pendingScreenClick.current;
+      if (pending && (pending.pointerId < 0 || e.pointerId === pending.pointerId)) {
+        pendingScreenClick.current = null;
+        if (
+          e.type !== "pointercancel" &&
+          isClickNotDrag(pending.startX, pending.startY, e.clientX, e.clientY)
+        ) {
+          activateControlRef.current(pending.controlId);
+        }
+      }
+
       const c = capture.current;
       if (!c.active) return;
       if (c.pointerId >= 0 && e.pointerId !== c.pointerId) return;
