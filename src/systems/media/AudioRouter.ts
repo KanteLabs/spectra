@@ -24,13 +24,17 @@ export class AudioRouter {
   private masterVolume = 0.6;
   private lifecycleAttached = false;
   private recovering = false;
+  private detachLifecycle: (() => void) | null = null;
+  private generation = 0;
 
   async unlock(): Promise<void> {
     if (typeof window === "undefined") return;
     if (!this.ctx) {
       this.ctx = new AudioContext();
     }
+    const generation = this.generation;
     await this.ensureRunning();
+    if (generation !== this.generation) return;
     this.unlocked = true;
     this.attachLifecycle();
   }
@@ -50,7 +54,7 @@ export class AudioRouter {
         /* gesture may still be required */
       }
     }
-    return this.ctx.state === "running";
+    return this.ctx?.state === "running";
   }
 
   private attachLifecycle(): void {
@@ -70,14 +74,22 @@ export class AudioRouter {
     window.addEventListener("focus", onFocus);
     window.addEventListener("pageshow", onFocus);
 
-    this.ctx?.addEventListener("statechange", () => {
+    const context = this.ctx;
+    const onStateChange = () => {
       const state = this.ctx?.state as string | undefined;
       if (state === "running") {
         void this.recoverAfterInterruption();
       } else if (state === "suspended" || state === "interrupted") {
         void this.ensureRunning();
       }
-    });
+    };
+    context?.addEventListener("statechange", onStateChange);
+    this.detachLifecycle = () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("pageshow", onFocus);
+      context?.removeEventListener("statechange", onStateChange);
+    };
   }
 
   /**
@@ -262,6 +274,10 @@ export class AudioRouter {
   }
 
   dispose(): void {
+    this.generation++;
+    this.activeSourceId = null;
+    this.detachLifecycle?.();
+    this.detachLifecycle = null;
     this.stopHum();
     void this.ctx?.close();
     this.ctx = null;

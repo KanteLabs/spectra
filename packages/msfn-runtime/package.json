@@ -1,0 +1,29 @@
+{
+  "name": "@msfn/spectra",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/runtime.js",
+  "types": "runtime.d.ts",
+  "files": [
+    "dist",
+    "runtime.d.ts"
+  ],
+  "scripts": {
+    "build": "node build.cjs"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "three": ">=0.180.0",
+    "@react-three/fiber": "^9.0.0",
+    "@react-three/drei": "^10.0.0",
+    "@react-three/postprocessing": "^3.0.0",
+    "@react-three/xr": "^6.6.0",
+    "gsap": "^3.0.0",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.10",
+    "postcss": "^8.4.0"
+  }
+}

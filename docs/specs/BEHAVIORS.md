@@ -67,3 +67,9 @@ Agent-facing contract for Nordmende Spectra. Prefer changing code to match these
 - `tests/orbitLimits.test.ts` — front orbit ±60° cone; starting distance is max zoom-out.
 
 If you change an invariant, update this file and the matching test in the same change.
+
+## Embedded host lifecycle
+
+The optional `packages/msfn-runtime` adapter mounts this same application in MSFN. It caps DPR to the supplied host budget, uses a container rather than viewport dimensions, and reserves Escape for the host. Standalone `npm run dev` is unchanged.
+
+On eject, audio lifecycle listeners detach, media stops, transient GPU resources and blob URLs are released, and UI/TV stores reset. IndexedDB uploads are retained. Device probing runs when Experience mounts rather than when its module is preloaded; the temporary probe context is released. XR developer emulation is disabled during module loading.

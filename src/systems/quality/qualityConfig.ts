@@ -347,6 +347,7 @@ export function detectDeviceQuality(): QualityLevel {
           score -= 10;
         }
       }
+      gl.getExtension("WEBGL_lose_context")?.loseContext();
     }
   } catch {
     score -= 8;

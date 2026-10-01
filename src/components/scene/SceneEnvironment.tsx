@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useMemo } from "react";
+import { Suspense, useMemo, useEffect } from "react";
 import * as THREE from "three";
 import { Environment, ContactShadows } from "@react-three/drei";
 import { useUiStore } from "@/state/uiStore";
@@ -35,6 +35,8 @@ function LivingRoom({
       new THREE.MeshStandardMaterial({ color: "#4a3020", roughness: 0.7 }),
     []
   );
+
+  useEffect(() => () => { wallMat.dispose(); carpetMat.dispose(); woodMat.dispose(); }, [wallMat, carpetMat, woodMat]);
 
   return (
     <group>

@@ -88,7 +88,7 @@ function PostFX() {
   );
 }
 
-export function Experience() {
+export function Experience({ maxDpr = Infinity }: { maxDpr?: number }) {
   const quality = useUiStore((s) => s.quality);
   const mode = useUiStore((s) => s.mode);
   const setMode = useUiStore((s) => s.setMode);
@@ -98,6 +98,9 @@ export function Experience() {
 
   useEffect(() => {
     useUiStore.getState().setCinemaScreen(null);
+    const detected = detectDeviceQuality();
+    useUiStore.getState().setQuality(detected);
+    useUiStore.getState().setQualityCeiling(detected === "xr" ? "medium" : detected);
   }, []);
 
   useEffect(() => {
@@ -143,7 +146,7 @@ export function Experience() {
       <KeyboardBridge />
       <Canvas
         shadows={cfg.shadows ? (cfg.softShadows ? "soft" : true) : false}
-        dpr={dpr}
+        dpr={Math.min(dpr, maxDpr)}
         gl={{
           antialias: cfg.antialias,
           powerPreference: "high-performance",

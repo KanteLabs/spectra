@@ -169,13 +169,14 @@ export class SourceManager {
   }
 
   private createImageSource(id: string, url: string): ManagedSource {
+    let disposed = false;
     const managed: ManagedSource = {
       id,
       texture: this.ensureFallback().texture,
       loadState: "loading",
       hasAudio: false,
       dispose: () => {
-        /* replaced below */
+        disposed = true;
       },
     };
     this.sources.set(id, managed);
@@ -185,6 +186,7 @@ export class SourceManager {
     loader.load(
       url,
       (texture) => {
+        if (disposed) { texture.dispose(); return; }
         texture.colorSpace = THREE.SRGBColorSpace;
         texture.minFilter = THREE.LinearFilter;
         texture.magFilter = THREE.LinearFilter;
@@ -196,6 +198,7 @@ export class SourceManager {
       },
       undefined,
       () => {
+        if (disposed) return;
         managed.loadState = "error";
         managed.texture = this.ensureFallback().texture;
         this.notify(id, "error");
@@ -213,6 +216,8 @@ export class SourceManager {
       playEndSec?: number;
     }
   ): ManagedSource {
+    let disposed = false;
+    let pauseFrame = 0;
     const video = document.createElement("video");
     video.playsInline = true;
     video.loop = !opts.playEndSec;
@@ -252,6 +257,11 @@ export class SourceManager {
         }
       },
       dispose: () => {
+        disposed = true;
+        cancelAnimationFrame(pauseFrame);
+        video.removeEventListener("pause", onPause);
+        video.removeEventListener("loadeddata", onLoadedData);
+        video.removeEventListener("error", onError);
         video.pause();
         video.removeAttribute("src");
         video.load();
@@ -265,7 +275,8 @@ export class SourceManager {
       if (managed.loadState !== "ready") return;
       if (shouldPauseManagedVideo(id, this.keepPlayingIds)) return;
       // Browser often pauses on tab hide / audio interrupt — kick play again.
-      requestAnimationFrame(() => {
+      pauseFrame = requestAnimationFrame(() => {
+        if (disposed) return;
         if (!managed.video || !managed.video.paused) return;
         if (shouldPauseManagedVideo(id, this.keepPlayingIds)) return;
         void managed.video.play().catch(() => undefined);
@@ -274,9 +285,10 @@ export class SourceManager {
     video.addEventListener("pause", onPause);
 
     const finishReady = async () => {
-      if (managed.loadState === "error") return;
+      if (disposed || managed.loadState === "error") return;
       try {
         const hasAudio = await detectVideoHasAudio(video);
+        if (disposed) return;
         managed.hasAudio = hasAudio;
         if (isUserSourceId(id)) {
           updateUserSourceAudio(id, hasAudio);
@@ -289,15 +301,16 @@ export class SourceManager {
       video.play().catch(() => undefined);
     };
 
-    video.addEventListener("loadeddata", () => {
-      void finishReady();
-    });
-    video.addEventListener("error", () => {
+    const onLoadedData = () => { void finishReady(); };
+    const onError = () => {
+      if (disposed) return;
       managed.loadState = "error";
       managed.hasAudio = false;
       this.notify(id, "error");
       managed.texture = this.ensureFallback().texture;
-    });
+    };
+    video.addEventListener("loadeddata", onLoadedData);
+    video.addEventListener("error", onError);
 
     video.load();
     return managed;
@@ -373,6 +386,8 @@ export class SourceManager {
   }
 
   dispose(): void {
+    this.keepPlayingIds.clear();
+    this.listeners.clear();
     this.sources.forEach((s) => s.dispose());
     this.sources.clear();
     this.fallbackPattern?.dispose();

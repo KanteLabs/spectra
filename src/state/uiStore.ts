@@ -6,7 +6,6 @@ import type {
   MainDepthEffect,
   QualityLevel,
 } from "@/types";
-import { detectDeviceQuality } from "@/systems/quality/qualityConfig";
 
 export interface UiStore {
   mode: InteractionMode;
@@ -63,14 +62,14 @@ function detectReducedMotion(): boolean {
 }
 
 const bootQuality: QualityLevel =
-  typeof window !== "undefined" ? detectDeviceQuality() : "medium";
+  "medium";
 
 export const useUiStore = create<UiStore>((set) => ({
   mode: "desktop",
   cameraPreset: "front",
   environment: "livingRoom",
   quality: bootQuality,
-  qualityCeiling: bootQuality === "xr" ? "medium" : bootQuality,
+  qualityCeiling: bootQuality,
   inspectionMode: false,
   explodedProgress: 0,
   cabinetTransparent: false,

@@ -352,6 +352,14 @@ export function SpectraTV() {
 
   useEffect(() => {
     modelRef.current = model;
+    const geometries = new Set<THREE.BufferGeometry>();
+    const ownedMaterials = new Set<THREE.Material>();
+    model.root.traverse(obj => {
+      const mesh = obj as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      geometries.add(mesh.geometry);
+      (Array.isArray(mesh.material) ? mesh.material : [mesh.material]).forEach(m => ownedMaterials.add(m));
+    });
 
     // Live-layout probe for CDP / manual checks
     if (typeof window !== "undefined") {
@@ -443,6 +451,13 @@ export function SpectraTV() {
 
     return () => {
       Object.values(mats).forEach((m) => m.dispose());
+      geometries.forEach(g => g.dispose());
+      ownedMaterials.forEach(m => {
+        Object.values(m).forEach(value => { if (value instanceof THREE.Texture) value.dispose(); });
+        m.dispose();
+      });
+      modelRef.current = null;
+      delete (window as unknown as { __spectraLayout?: unknown }).__spectraLayout;
       orbit.dispose();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

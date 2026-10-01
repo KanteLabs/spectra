@@ -21,6 +21,7 @@ type Listener = () => void;
 const userSources: SourceDefinition[] = [];
 const listeners = new Set<Listener>();
 let hydratePromise: Promise<void> | null = null;
+let generation = 0;
 
 function notify() {
   listeners.forEach((l) => l());
@@ -71,9 +72,11 @@ function recordToDef(record: StoredUserMedia): SourceDefinition {
  */
 export function hydrateUserSourcesFromDb(): Promise<void> {
   if (hydratePromise) return hydratePromise;
+  const currentGeneration = generation;
   hydratePromise = (async () => {
     try {
       const rows = await idbGetAllMedia();
+      if (currentGeneration !== generation) return;
       rows.sort((a, b) => a.createdAt - b.createdAt);
       for (const row of rows) {
         if (userSources.some((s) => s.id === row.id)) continue;
@@ -178,4 +181,15 @@ export function clearUserSources(): void {
   }
   notify();
   void idbClearMedia().catch(() => undefined);
+}
+
+/** Release in-memory URLs on eject without deleting the persisted media library. */
+export function releaseUserSources(): void {
+  generation++;
+  hydratePromise = null;
+  for (const source of userSources) {
+    if (source.url?.startsWith("blob:")) URL.revokeObjectURL(source.url);
+    if (source.posterUrl?.startsWith("blob:")) URL.revokeObjectURL(source.posterUrl);
+  }
+  userSources.length = 0;
 }
