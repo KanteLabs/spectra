@@ -199,6 +199,7 @@ export function ControlPanel() {
         id="spectra-controls"
         className={`control-panel ${panelOpen ? "open" : ""} ${highContrast ? "hc" : ""}`}
         aria-label="Nordmende Spectra accessible controls"
+        aria-hidden={!panelOpen}
       >
         <header>
           <h1>Spectra Color Studio</h1>
