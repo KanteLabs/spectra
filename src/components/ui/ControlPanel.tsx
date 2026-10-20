@@ -87,6 +87,7 @@ export function ControlPanel() {
   const highContrast = useUiStore((s) => s.highContrast);
   const setHighContrast = useUiStore((s) => s.setHighContrast);
   const setCameraPreset = useUiStore((s) => s.setCameraPreset);
+  const cameraPreset = useUiStore((s) => s.cameraPreset);
   const warningAcknowledged = useUiStore((s) => s.warningAcknowledged);
   const setWarningAcknowledged = useUiStore((s) => s.setWarningAcknowledged);
   const mainDepthEffect = useUiStore((s) => s.mainDepthEffect);
@@ -104,6 +105,16 @@ export function ControlPanel() {
   const [uploadBusy, setUploadBusy] = useState(false);
   const [dropActive, setDropActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    // A translated-offscreen drawer must not retain keyboard focus.
+    if (!panelOpen && panelRef.current?.contains(document.activeElement)) {
+      toggleRef.current?.focus({ preventScroll: true });
+    }
+    panelRef.current?.toggleAttribute("inert", !panelOpen);
+  }, [panelOpen]);
 
   useEffect(() => {
     return subscribe((ev) => {
@@ -182,20 +193,43 @@ export function ControlPanel() {
         {announce}
       </div>
 
-      <button
-        type="button"
-        className="panel-toggle"
-        aria-expanded={panelOpen}
-        aria-controls="spectra-controls"
-        onClick={() => {
-          unlockMedia();
-          setPanelOpen(!panelOpen);
-        }}
-      >
-        {panelOpen ? "Hide controls" : "Controls"}
-      </button>
+      <div className="control-dock" role="group" aria-label="Quick controls">
+        <button
+          type="button"
+          className="quick-control"
+          aria-label="Toggle TV power"
+          aria-pressed={power === "on" || power === "starting"}
+          onClick={() => {
+            unlockMedia();
+            togglePower();
+          }}
+        >
+          Power {power === "on" || power === "starting" ? "on" : "off"}
+        </button>
+        <button
+          type="button"
+          className="quick-control"
+          onClick={() => useUiStore.getState().setMainCrtZoom(cameraPreset !== "mainCrt")}
+        >
+          {cameraPreset === "mainCrt" ? "Back to TV" : "View screen"}
+        </button>
+        <button
+          ref={toggleRef}
+          type="button"
+          className="panel-toggle"
+          aria-expanded={panelOpen}
+          aria-controls="spectra-controls"
+          onClick={() => {
+            unlockMedia();
+            setPanelOpen(!panelOpen);
+          }}
+        >
+          {panelOpen ? "Hide controls" : "Controls"}
+        </button>
+      </div>
 
       <aside
+        ref={panelRef}
         id="spectra-controls"
         className={`control-panel ${panelOpen ? "open" : ""} ${highContrast ? "hc" : ""}`}
         aria-label="Nordmende Spectra accessible controls"
@@ -286,7 +320,7 @@ export function ControlPanel() {
           <h2 id="sources-heading">Sources</h2>
           {(["main", "preview1", "preview2", "preview3"] as ScreenId[]).map(
             (screenId) => (
-              <label key={screenId} className="field">
+              <div key={screenId} className="field">
                 <span>{screenId}</span>
                 <select
                   value={screens[screenId].sourceId}
@@ -326,7 +360,7 @@ export function ControlPanel() {
                   />
                   On
                 </label>
-              </label>
+              </div>
             )
           )}
 

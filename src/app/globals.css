@@ -28,8 +28,28 @@ body {
 
 .app-shell {
   position: relative;
-  width: 100vw;
+  width: 100%;
+  height: 100vh;
   height: 100dvh;
+  overflow: hidden;
+  overflow: clip;
+  isolation: isolate;
+}
+
+.scene-viewport {
+  position: absolute;
+  inset: 0;
+  min-width: 0;
+  min-height: 0;
+}
+
+.scene-viewport canvas {
+  touch-action: none;
+}
+
+.touch-hint,
+.quick-control {
+  display: none;
 }
 
 .loading {
@@ -75,6 +95,7 @@ body {
 }
 
 .xr-button,
+.control-dock button,
 .panel-toggle,
 .control-panel button,
 .warning-card button {
@@ -95,14 +116,17 @@ body {
 }
 
 .panel-toggle {
+  position: relative;
+}
+
+.control-dock {
   position: absolute;
-  bottom: 1rem;
-  right: 1rem;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  right: max(1rem, env(safe-area-inset-right));
   z-index: 20;
 }
 
 .control-panel {
-  visibility: hidden;
   position: absolute;
   top: 0;
   right: 0;
@@ -110,17 +134,19 @@ body {
   width: min(360px, 100%);
   background: var(--panel);
   border-left: 1px solid var(--line);
-  padding: 1.25rem;
+  padding: max(1.25rem, env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-right)) calc(5rem + env(safe-area-inset-bottom)) 1.25rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  visibility: hidden;
   transform: translateX(105%);
-  transition: transform 0.28s ease;
+  transition: transform 0.28s ease, visibility 0.28s;
   z-index: 15;
   backdrop-filter: blur(8px);
 }
 
 .control-panel.open {
-  visibility: visible;
   transform: translateX(0);
+  visibility: visible;
 }
 
 .control-panel.hc {
@@ -157,7 +183,12 @@ body {
 .control-panel .row {
   display: flex;
   gap: 0.4rem;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
+  margin-bottom: 0.4rem;
+}
+
+.control-panel .row > button {
+  flex: 1 1 auto;
 }
 
 .control-panel .row.wrap {
@@ -174,7 +205,26 @@ body {
 .control-panel select,
 .control-panel input[type="range"] {
   width: 100%;
+  min-width: 0;
   cursor: pointer;
+}
+
+.control-panel select {
+  font: inherit;
+  color: var(--ink);
+  background: #241b16;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 0.5rem;
+}
+
+.control-panel p,
+.user-media-meta > span {
+  overflow-wrap: anywhere;
+}
+
+.control-panel.hc select {
+  background: #000;
 }
 
 .control-panel input[type="range"] {
@@ -285,6 +335,7 @@ body {
 
 .control-panel button:focus-visible,
 .panel-toggle:focus-visible,
+.quick-control:focus-visible,
 .xr-button:focus-visible,
 select:focus-visible,
 input:focus-visible {
@@ -310,6 +361,8 @@ input:focus-visible {
   display: grid;
   place-items: center;
   z-index: 40;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  overflow-y: auto;
 }
 
 .warning-card {
@@ -317,7 +370,9 @@ input:focus-visible {
   border: 1px solid var(--line);
   padding: 1.25rem;
   max-width: 360px;
-  width: calc(100% - 2rem);
+  width: 100%;
+  max-height: 100%;
+  overflow-y: auto;
 }
 
 .warning-card h2 {
@@ -325,27 +380,162 @@ input:focus-visible {
   margin-top: 0;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 1024px), (max-height: 540px) and (max-width: 1180px), (pointer: coarse) and (max-width: 1366px) {
+  .app-shell {
+    --dock-height: calc(72px + env(safe-area-inset-bottom));
+    --header-height: calc(70px + env(safe-area-inset-top));
+    --sheet-height: min(52%, 560px);
+  }
+  .hud {
+    top: calc(1rem + env(safe-area-inset-top));
+    left: max(1rem, env(safe-area-inset-left));
+    right: max(1rem, env(safe-area-inset-right));
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .brand-mark {
+    min-width: 0;
+  }
+  .brand {
+    font-size: clamp(1rem, 3.5vw, 1.4rem);
+  }
+  .product {
+    font-size: clamp(0.6rem, 2.1vw, 0.75rem);
+  }
+  .scene-viewport {
+    top: var(--header-height);
+    bottom: var(--dock-height);
+  }
+  .controls-open .scene-viewport {
+    bottom: calc(var(--dock-height) + var(--sheet-height));
+  }
+  .control-dock {
+    inset: auto 0 0;
+    height: var(--dock-height);
+    padding: 10px max(12px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.15fr;
+    gap: 8px;
+    border-top: 1px solid var(--line);
+    background: #1c1612;
+  }
+  .quick-control {
+    display: block;
+  }
+  .control-dock button {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  .quick-control[aria-pressed="true"] {
+    color: var(--focus);
+  }
+  .panel-toggle {
+    background: var(--accent);
+    border-color: #8a1015;
+  }
+  .touch-hint {
+    display: block;
+    position: absolute;
+    bottom: calc(var(--dock-height) + 10px);
+    left: 0;
+    right: 0;
+    margin: 0;
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--muted);
+    pointer-events: none;
+    text-shadow: 0 1px 6px #000;
+  }
+  .controls-open .touch-hint {
+    display: none;
+  }
   .control-panel {
     top: auto;
     left: 0;
     right: 0;
     width: 100%;
-    max-height: 55dvh;
+    bottom: var(--dock-height);
+    height: var(--sheet-height);
+    max-height: calc(100% - var(--dock-height) - var(--header-height));
     border-left: none;
     border-top: 1px solid var(--line);
     transform: translateY(110%);
     border-radius: 12px 12px 0 0;
+    padding: 1rem max(1rem, env(safe-area-inset-right)) 1.5rem max(1rem, env(safe-area-inset-left));
   }
   .control-panel.open {
     transform: translateY(0);
   }
-  .panel-toggle {
-    bottom: 1rem;
-    right: 50%;
-    transform: translateX(50%);
+  .control-panel button,
+  .control-dock button,
+  .xr-button,
+  .warning-card button,
+  .control-panel select,
+  .control-panel input[type="range"],
+  .control-panel .check {
+    min-height: 44px;
   }
-  .brand {
-    font-size: 1.1rem;
+  .control-panel section > .row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .control-panel section > .row > button {
+    padding: 0.45rem 0.25rem;
+    font-size: 0.8rem;
+  }
+  .control-panel select {
+    font-size: 1rem;
+  }
+  .control-panel input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    accent-color: var(--accent);
+  }
+  .control-panel input[type="range"] {
+    margin: 0;
+    accent-color: var(--focus);
+  }
+  .control-panel .user-video-list li {
+    flex-wrap: wrap;
+  }
+}
+
+/* Short landscape screens need a side drawer to leave room for the TV. */
+@media (max-height: 540px) and (min-width: 600px) and (max-width: 1180px) {
+  .app-shell {
+    --header-height: calc(56px + env(safe-area-inset-top));
+    --side-width: min(360px, 45%);
+  }
+  .controls-open .scene-viewport {
+    bottom: var(--dock-height);
+    right: var(--side-width);
+  }
+  .control-panel {
+    top: env(safe-area-inset-top);
+    left: auto;
+    width: var(--side-width);
+    height: auto;
+    max-height: none;
+    border-radius: 0;
+    border-top: none;
+    border-left: 1px solid var(--line);
+    transform: translateX(105%);
+  }
+  .control-panel.open {
+    transform: translateX(0);
+  }
+  .controls-open .hud {
+    right: calc(var(--side-width) + 1rem);
+  }
+  .touch-hint {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .control-panel {
+    transition: none;
   }
 }

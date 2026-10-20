@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import gsap from "gsap";
@@ -40,7 +40,12 @@ function goalForPreset(
   fov: number
 ): { position: [number, number, number]; target: [number, number, number] } {
   if (preset === "mainCrt") return computeMainCrtView(aspect, fov);
-  if (preset === "front" || preset === "reset") return frontViewForAspect(aspect, fov);
+  if (
+    preset === "front" || preset === "reset" ||
+    (preset === "focused" && !focusControlId)
+  ) {
+    return frontViewForAspect(aspect, fov);
+  }
   if (preset === "focused" && focusControlId) {
     return {
       position: [0.35, 1.05, 1.35],
@@ -112,10 +117,9 @@ export function CameraRig() {
   const fov = camera instanceof THREE.PerspectiveCamera ? camera.fov : 40;
   const lockSquare = preset === "mainCrt";
   const homeOrbit = preset === "front" || preset === "reset";
-  const frontView = useMemo(() => frontViewForAspect(aspect, fov), [aspect, fov]);
-  const orbitLimits = homeOrbit ? frontOrbitLimits(frontView) : INSPECT_ORBIT_LIMITS;
-  const homeAspect = homeOrbit ? aspect : 0;
-  const homeFov = homeOrbit ? fov : 0;
+  const orbitLimits = homeOrbit
+    ? frontOrbitLimits(frontViewForAspect(aspect, fov))
+    : INSPECT_ORBIT_LIMITS;
   // Only "focused" cares about focusControlId — ignore it otherwise so CRT
   // zoom leave (preset+focus cleared together) cannot double-fire the tween.
   const focusKey = preset === "focused" ? focusControlId : null;
@@ -219,56 +223,81 @@ export function CameraRig() {
       // Re-enabling here caused a one-frame jump before the zoom-out tween.
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preset, focusKey, camera, reducedMotion, mode, homeAspect, homeFov]);
+  }, [preset, focusKey, camera, reducedMotion, mode]);
 
+  const previousViewport = useRef({ aspect, fov });
   useEffect(() => {
-    if (mode === "xr") return;
-    if (preset !== "mainCrt") return;
-    if (presetAnimatingRef.current) return;
-    if (reducedMotion) return;
+    const previous = previousViewport.current;
+    previousViewport.current = { aspect, fov };
+    if (previous.aspect === aspect && previous.fov === fov) return;
+    if (mode === "xr" || (!homeOrbit && !lockSquare)) return;
 
-    const controls = controlsRef.current;
-    if (!controls) return;
+    let raf = 0;
+    let resizeTween: gsap.core.Tween | null = null;
+    const reframe = () => {
+      // Resize independently of preset changes; finish a zoom before fitting again.
+      if (presetAnimatingRef.current || !controlsRef.current) {
+        raf = requestAnimationFrame(reframe);
+        return;
+      }
+      const controls = controlsRef.current;
+      const goal = goalForPreset(preset, null, aspect, fov);
+      const level = lockSquare;
+      if (level) leveledGoalRef.current = goal;
+      tweenRef.current?.kill();
+      presetAnimatingRef.current = true;
+      controls.enabled = false;
+      setFreeOrbit(false);
 
-    const goal = computeMainCrtView(aspect, fov);
-    leveledGoalRef.current = goal;
-    tweenRef.current?.kill();
+      const proxy = {
+        px: camera.position.x,
+        py: camera.position.y,
+        pz: camera.position.z,
+        tx: controls.target.x,
+        ty: controls.target.y,
+        tz: controls.target.z,
+      };
 
-    const proxy = {
-      px: camera.position.x,
-      py: camera.position.y,
-      pz: camera.position.z,
-      tx: controls.target.x,
-      ty: controls.target.y,
-      tz: controls.target.z,
+      resizeTween = gsap.to(proxy, {
+        px: goal.position[0],
+        py: goal.position[1],
+        pz: goal.position[2],
+        tx: goal.target[0],
+        ty: goal.target[1],
+        tz: goal.target[2],
+        duration: reducedMotion ? 0 : 0.2,
+        ease: "power2.out",
+        onUpdate: () => {
+          applyPose(
+            camera,
+            controls,
+            [proxy.px, proxy.py, proxy.pz],
+            [proxy.tx, proxy.ty, proxy.tz],
+            { level, syncOrbit: false }
+          );
+        },
+        onComplete: () => {
+          applyPose(camera, controls, goal.position, goal.target, {
+            level,
+            syncOrbit: !level,
+          });
+          presetAnimatingRef.current = false;
+          controls.enabled = !level;
+          controls.enableRotate = !level;
+          setFreeOrbit(!level);
+        },
+      });
+      tweenRef.current = resizeTween;
     };
-
-    tweenRef.current = gsap.to(proxy, {
-      px: goal.position[0],
-      py: goal.position[1],
-      pz: goal.position[2],
-      tx: goal.target[0],
-      ty: goal.target[1],
-      tz: goal.target[2],
-      duration: 0.2,
-      ease: "power2.out",
-      onUpdate: () => {
-        applyPose(
-          camera,
-          controls,
-          [proxy.px, proxy.py, proxy.pz],
-          [proxy.tx, proxy.ty, proxy.tz],
-          { level: true, syncOrbit: false }
-        );
-      },
-      onComplete: () => {
-        applyPose(camera, controls, goal.position, goal.target, {
-          level: true,
-          syncOrbit: false,
-        });
-      },
-    });
-  }, [aspect, fov, preset, camera, mode, reducedMotion]);
+    reframe();
+    return () => {
+      cancelAnimationFrame(raf);
+      resizeTween?.kill();
+      if (resizeTween && tweenRef.current === resizeTween) {
+        presetAnimatingRef.current = false;
+      }
+    };
+  }, [aspect, fov, preset, homeOrbit, lockSquare, camera, mode, reducedMotion]);
 
   const targetSeededRef = useRef(false);
   useEffect(() => {
@@ -319,7 +348,7 @@ export function CameraRig() {
       ) > ORBIT_RETURN_PAN;
     if (!rotated && !panned) return;
 
-    const goal = frontView;
+    const goal = frontViewForAspect(aspect, fov);
     const alreadyHome =
       Math.hypot(
         camera.position.x - goal.position[0],
@@ -378,7 +407,7 @@ export function CameraRig() {
         setFreeOrbit(true);
       },
     });
-  }, [camera, frontView]);
+  }, [camera, aspect, fov]);
 
   if (mode === "xr") return null;
 

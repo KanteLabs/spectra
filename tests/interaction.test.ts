@@ -57,6 +57,28 @@ describe("pointer math", () => {
 });
 
 describe("keyboard", () => {
+  it("leaves DOM buttons and links to native keyboard navigation", () => {
+    for (const tagName of ["BUTTON", "A", "INPUT", "SELECT"]) {
+      const target = { tagName, closest: () => ({ tagName }) };
+      for (const key of ["Tab", "Enter", " ", "ArrowRight", "p", "Escape"]) {
+        expect(parseKeyAction({ key, target } as unknown as KeyboardEvent)).toBeNull();
+      }
+    }
+  });
+
+  it("preserves native Tab traversal and host-owned keyboard events", () => {
+    for (const event of [
+      { key: "Tab" },
+      { key: "p", defaultPrevented: true },
+      { key: "p", ctrlKey: true },
+      { key: "p", metaKey: true },
+      { key: "p", altKey: true },
+      { key: "Enter", target: { closest: () => ({ tagName: "BUTTON" }) } },
+    ]) {
+      expect(parseKeyAction(event as unknown as KeyboardEvent)).toBeNull();
+    }
+  });
+
   it("parses camera presets", () => {
     const ev = { key: "1", shiftKey: false, target: null } as unknown as KeyboardEvent;
     expect(parseKeyAction(ev)).toEqual({ type: "cameraPreset", preset: "front" });

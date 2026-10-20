@@ -9,7 +9,9 @@ import { useTvStore } from "../../src/state/tvStore";
 import { releaseUserSources } from "../../src/systems/media/userSources";
 import { xrStore } from "../../src/systems/xr/xrStore";
 type Props = { active:boolean; onExit:()=>void; containerSize:{width:number;height:number} };
+const EmbeddedExperience = React.memo(Experience);
 function SpectraRuntime({ active, containerSize }: Props) {
+ const panelOpen = useUiStore((s) => s.panelOpen);
  useEffect(() => () => {
    getAudioRouter().dispose();
    getSourceManager().dispose();
@@ -20,8 +22,8 @@ function SpectraRuntime({ active, containerSize }: Props) {
  }, []);
  return <div className="spectra-runtime" aria-label="Spectra multiview media system"
    style={{width:containerSize.width,height:containerSize.height}}>
-   {active && <div className="app-shell">
-     <Experience maxDpr={1.75} />
+   {active && <div className={`app-shell ${panelOpen ? "controls-open" : ""}`}>
+     <div className="scene-viewport"><EmbeddedExperience maxDpr={1.75} /></div>
      <div className="hud"><div className="brand-mark" aria-hidden="true">
        <span className="brand">NORDMENDE</span><span className="product">Spectra Color Studio · 1973</span>
      </div><XRButton /></div>
