@@ -5,6 +5,18 @@ export const FRONT_VIEW = {
   target: [0, 1.05, 0.08] as [number, number, number],
 };
 
+/** Keep the approved desktop pose; back away only when cabinet width would crop. */
+export function frontViewForAspect(aspect: number, fovDeg = 40): typeof FRONT_VIEW {
+  const safeAspect = Math.max(0.2, aspect || 1);
+  // Cabinet trim is 1.06 m wide; reserve space around its front controls (z < .3).
+  const requiredZ = 0.3 + (1.06 * 1.16) / (2 * Math.tan(fovDeg * Math.PI / 360) * safeAspect);
+  const scale = Math.max(1, (requiredZ - FRONT_VIEW.target[2]) / (FRONT_VIEW.position[2] - FRONT_VIEW.target[2]));
+  return {
+    position: FRONT_VIEW.position.map((value, i) => FRONT_VIEW.target[i] + (value - FRONT_VIEW.target[i]) * scale) as [number, number, number],
+    target: [...FRONT_VIEW.target],
+  };
+}
+
 /** ±60° from the starting front spherical. */
 export const ORBIT_SWEEP_RAD = Math.PI / 3;
 
@@ -34,9 +46,9 @@ export function sphericalFromOffset(
 }
 
 /** Starting camera-to-target distance — also the farthest free-orbit dolly. */
-export function frontOrbitRadius(): number {
-  const [px, py, pz] = FRONT_VIEW.position;
-  const [tx, ty, tz] = FRONT_VIEW.target;
+export function frontOrbitRadius(view = FRONT_VIEW): number {
+  const [px, py, pz] = view.position;
+  const [tx, ty, tz] = view.target;
   return Math.hypot(px - tx, py - ty, pz - tz);
 }
 
@@ -44,9 +56,9 @@ export function frontOrbitRadius(): number {
  * Free-look around the default front pose: ±60° yaw/pitch, cannot dolly
  * farther out than the starting framing.
  */
-export function frontOrbitLimits(): OrbitLimitSet {
-  const [px, py, pz] = FRONT_VIEW.position;
-  const [tx, ty, tz] = FRONT_VIEW.target;
+export function frontOrbitLimits(view = FRONT_VIEW): OrbitLimitSet {
+  const [px, py, pz] = view.position;
+  const [tx, ty, tz] = view.target;
   const { radius, phi, theta } = sphericalFromOffset(px - tx, py - ty, pz - tz);
   return {
     minDistance: Math.min(0.45, radius * 0.35),

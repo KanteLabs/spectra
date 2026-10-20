@@ -36,7 +36,7 @@ Next.js 14 · React 18 · TypeScript · Three.js · R3F · Drei · React Three X
 | Right / modifier drag | Pan |
 | Wheel | Zoom |
 | Click controls | Operate knobs / buttons / sliders |
-| Tab / arrows / Enter | Keyboard control cycle |
+| Tab / Shift+Tab | Move between accessible controls (arrows / Enter use native control behavior) |
 | 1–6 | Camera presets / reset |
 | P | Power |
 | Esc | Exit focus / cinema |

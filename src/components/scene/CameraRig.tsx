@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import gsap from "gsap";
@@ -16,6 +16,7 @@ import {
   FRONT_VIEW,
   INSPECT_ORBIT_LIMITS,
   frontOrbitLimits,
+  frontViewForAspect,
 } from "@/systems/camera/orbitLimits";
 
 export { CAMERA_PRESET_MS };
@@ -39,6 +40,7 @@ function goalForPreset(
   fov: number
 ): { position: [number, number, number]; target: [number, number, number] } {
   if (preset === "mainCrt") return computeMainCrtView(aspect, fov);
+  if (preset === "front" || preset === "reset") return frontViewForAspect(aspect, fov);
   if (preset === "focused" && focusControlId) {
     return {
       position: [0.35, 1.05, 1.35],
@@ -110,7 +112,10 @@ export function CameraRig() {
   const fov = camera instanceof THREE.PerspectiveCamera ? camera.fov : 40;
   const lockSquare = preset === "mainCrt";
   const homeOrbit = preset === "front" || preset === "reset";
-  const orbitLimits = homeOrbit ? frontOrbitLimits() : INSPECT_ORBIT_LIMITS;
+  const frontView = useMemo(() => frontViewForAspect(aspect, fov), [aspect, fov]);
+  const orbitLimits = homeOrbit ? frontOrbitLimits(frontView) : INSPECT_ORBIT_LIMITS;
+  const homeAspect = homeOrbit ? aspect : 0;
+  const homeFov = homeOrbit ? fov : 0;
   // Only "focused" cares about focusControlId — ignore it otherwise so CRT
   // zoom leave (preset+focus cleared together) cannot double-fire the tween.
   const focusKey = preset === "focused" ? focusControlId : null;
@@ -214,7 +219,7 @@ export function CameraRig() {
       // Re-enabling here caused a one-frame jump before the zoom-out tween.
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preset, focusKey, camera, reducedMotion, mode]);
+  }, [preset, focusKey, camera, reducedMotion, mode, homeAspect, homeFov]);
 
   useEffect(() => {
     if (mode === "xr") return;
@@ -314,7 +319,7 @@ export function CameraRig() {
       ) > ORBIT_RETURN_PAN;
     if (!rotated && !panned) return;
 
-    const goal = FRONT_VIEW;
+    const goal = frontView;
     const alreadyHome =
       Math.hypot(
         camera.position.x - goal.position[0],
@@ -373,7 +378,7 @@ export function CameraRig() {
         setFreeOrbit(true);
       },
     });
-  }, [camera]);
+  }, [camera, frontView]);
 
   if (mode === "xr") return null;
 

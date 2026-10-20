@@ -11,17 +11,14 @@ export type KeyAction =
   | { type: "resetCamera" };
 
 export function parseKeyAction(e: KeyboardEvent): KeyAction | null {
-  const target = e.target as unknown as { tagName?: string } | null;
-  if (
-    target &&
-    typeof target.tagName === "string" &&
-    ["INPUT", "SELECT", "TEXTAREA"].includes(target.tagName)
-  ) {
+  const target = e.target as Element | null;
+  // Native focus traversal and focused DOM controls own their keyboard events.
+  // In particular, do not trap Tab on MSFN's Eject button or the control panel.
+  if (e.defaultPrevented || e.key === "Tab" || e.ctrlKey || e.metaKey || e.altKey ||
+      target?.closest?.("button,a,input,select,textarea,[contenteditable]:not([contenteditable=false]),[role=button],[role=slider],[role=tab]")) {
     return null;
   }
   switch (e.key) {
-    case "Tab":
-      return e.shiftKey ? { type: "focusPrev" } : { type: "focusNext" };
     case "Enter":
     case " ":
       return { type: "activate" };
