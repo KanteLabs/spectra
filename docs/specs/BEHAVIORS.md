@@ -38,6 +38,7 @@ Agent-facing contract for Nordmende Spectra. Prefer changing code to match these
 
 ## Controls
 
+- The nonmodal Field guide opens on the first visit and remains available from Guide. Starting or dismissing it is remembered in local storage; unavailable storage must not prevent use. Guide and Controls are mutually exclusive. Its demonstrations use the existing power, routing, audio-unlock, and camera actions, respect assignment locks and screen power, and never reset the user's setup. Steps support keyboard navigation and restore focus on dismissal; embedded Escape remains host-owned. Portrait uses a bottom sheet and short landscape a side drawer, leaving room for the TV.
 - Phones/tablets have a persistent power / main-screen view / controls dock with 44px touch targets and safe-area spacing. Portrait controls use a scrolling bottom sheet; short landscape screens use a side drawer. The scene resizes into the available space. Closed controls are hidden from focus and assistive technology. DOM controls retain native keyboard behavior; Tab traversal, modifier shortcuts, and host-owned events are never intercepted.
 - Pointer/grab cursors on interactive meshes; knobs/sliders use grab/grabbing.
 - Main knob: angular drag with accumulated angle + pointer capture for the full press.

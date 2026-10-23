@@ -47,6 +47,10 @@ XR: Enter VR (when supported). Ray + near grab on the same physical controls. Wr
 
 Drag to orbit, pinch to zoom, and tap a CRT to view/promote it. The bottom bar provides power, a main-screen view toggle, and controls. Controls open below the TV in portrait and beside it on short landscape screens. The camera adapts to the available scene width on resize and rotation. Controls respect device safe areas and use larger touch targets.
 
+## Field guide
+
+The first visit opens a short interactive guide covering power, preview swapping, channel tuning, the main-screen view, and personal media. Try the controls directly in each step, or dismiss it and explore. The **Guide** button reopens it at any time. The guide remembers dismissal in this browser and works alongside the TV on desktop, phones, and tablets.
+
 ## Architecture
 
 See `src/state`, `src/systems`, `src/model`, `src/shaders/crt`, `src/components/scene`.
