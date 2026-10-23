@@ -23,6 +23,7 @@ export interface UiStore {
   reducedFlicker: boolean;
   highContrast: boolean;
   panelOpen: boolean;
+  guideOpen: boolean;
   xrSupported: boolean;
   seatedMode: boolean;
   smoothTurn: boolean;
@@ -46,6 +47,7 @@ export interface UiStore {
   setReducedFlicker: (on: boolean) => void;
   setHighContrast: (on: boolean) => void;
   setPanelOpen: (on: boolean) => void;
+  setGuideOpen: (on: boolean) => void;
   setXrSupported: (on: boolean) => void;
   setSeatedMode: (on: boolean) => void;
   setSmoothTurn: (on: boolean) => void;
@@ -79,6 +81,7 @@ export const useUiStore = create<UiStore>((set) => ({
   reducedFlicker: false,
   highContrast: false,
   panelOpen: false,
+  guideOpen: false,
   xrSupported: false,
   seatedMode: false,
   smoothTurn: false,
@@ -100,7 +103,8 @@ export const useUiStore = create<UiStore>((set) => ({
   setReducedMotion: (reducedMotion) => set({ reducedMotion }),
   setReducedFlicker: (reducedFlicker) => set({ reducedFlicker }),
   setHighContrast: (highContrast) => set({ highContrast }),
-  setPanelOpen: (panelOpen) => set({ panelOpen }),
+  setPanelOpen: (panelOpen) => set(panelOpen ? { panelOpen, guideOpen: false } : { panelOpen }),
+  setGuideOpen: (guideOpen) => set(guideOpen ? { guideOpen, panelOpen: false } : { guideOpen }),
   setXrSupported: (xrSupported) => set({ xrSupported }),
   setSeatedMode: (seatedMode) => set({ seatedMode }),
   setSmoothTurn: (smoothTurn) => set({ smoothTurn }),

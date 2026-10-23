@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTvStore } from "@/state/tvStore";
 import { useUiStore } from "@/state/uiStore";
 import {
@@ -108,7 +108,7 @@ export function ControlPanel() {
   const panelRef = useRef<HTMLElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     // A translated-offscreen drawer must not retain keyboard focus.
     if (!panelOpen && panelRef.current?.contains(document.activeElement)) {
       toggleRef.current?.focus({ preventScroll: true });
@@ -236,7 +236,7 @@ export function ControlPanel() {
         aria-hidden={!panelOpen}
       >
         <header>
-          <h1>Spectra Color Studio</h1>
+          <h1 tabIndex={-1}>Spectra Color Studio</h1>
           <p className="sub">1973 · Multiview television</p>
         </header>
 

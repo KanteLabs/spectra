@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Experience } from "../../src/components/scene/Experience";
 import { ControlPanel } from "../../src/components/ui/ControlPanel";
 import { XRButton } from "../../src/components/ui/XRButton";
+import { GuideButton, SpectraGuide } from "../../src/components/ui/SpectraGuide";
 import { getAudioRouter } from "../../src/systems/media/AudioRouter";
 import { getSourceManager } from "../../src/systems/media/SourceManager";
 import { useUiStore } from "../../src/state/uiStore";
@@ -12,6 +13,7 @@ type Props = { active:boolean; onExit:()=>void; containerSize:{width:number;heig
 const EmbeddedExperience = React.memo(Experience);
 function SpectraRuntime({ active, containerSize }: Props) {
  const panelOpen = useUiStore((s) => s.panelOpen);
+ const guideOpen = useUiStore((s) => s.guideOpen);
  useEffect(() => () => {
    getAudioRouter().dispose();
    getSourceManager().dispose();
@@ -22,12 +24,13 @@ function SpectraRuntime({ active, containerSize }: Props) {
  }, []);
  return <div className="spectra-runtime" aria-label="Spectra multiview media system"
    style={{width:containerSize.width,height:containerSize.height}}>
-   {active && <div className={`app-shell ${panelOpen ? "controls-open" : ""}`}>
+   {active && <div className={`app-shell ${panelOpen ? "controls-open" : ""} ${guideOpen ? "guide-open" : ""}`}>
      <div className="scene-viewport"><EmbeddedExperience maxDpr={1.75} /></div>
      <div className="hud"><div className="brand-mark" aria-hidden="true">
        <span className="brand">NORDMENDE</span><span className="product">Spectra Color Studio · 1973</span>
-     </div><XRButton /></div>
+     </div><div className="hud-actions"><GuideButton /><XRButton /></div></div>
      <ControlPanel />
+     <SpectraGuide embedded />
    </div>}
  </div>;
 }
