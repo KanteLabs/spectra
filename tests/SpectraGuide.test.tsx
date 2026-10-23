@@ -65,7 +65,7 @@ describe("Spectra field guide", () => {
     const firstVisit = mountGuide();
     expect(screen.getByRole("dialog", { name: "Your own television studio" })).toBeVisible();
 
-    fireEvent.click(screen.getByRole("button", { name: "Explore on my own" }));
+    fireEvent.click(screen.getByRole("button", { name: "Skip guide" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(localStorage.getItem(GUIDE_SEEN_KEY)).toBe("1");
     expect(screen.getByRole("button", { name: "Guide" })).toHaveFocus();
@@ -125,7 +125,7 @@ describe("Spectra field guide", () => {
     fireEvent.click(screen.getByRole("button", { name: "Try preview 1" }));
     expect(useTvStore.getState().screens.main.sourceId).toBe(originalPreview);
     expect(useTvStore.getState().screens.preview1.sourceId).toBe(originalMain);
-    expect(screen.getByRole("status")).toHaveTextContent("swapped places");
+    expect(screen.getByRole("status")).toHaveTextContent("swapped with main");
     expect(audio.unlock).toHaveBeenCalledTimes(1);
 
     act(() => useTvStore.getState().setLock(true));
@@ -135,13 +135,13 @@ describe("Spectra field guide", () => {
     expect(screen.getByText(/Assignments are locked\. Unlock them/)).toBeVisible();
 
     fireEvent.click(screen.getByRole("button", { name: /Next/ }));
-    expect(screen.getByRole("button", { name: "Starfield" })).toBeDisabled();
-    fireEvent.click(screen.getByRole("button", { name: "Starfield" }));
+    expect(screen.getByRole("button", { name: "Stars" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Stars" }));
     expect(useTvStore.getState().screens.main.sourceId).toBe(originalPreview);
     act(() => useTvStore.getState().setLock(false));
-    fireEvent.click(screen.getByRole("button", { name: "Starfield" }));
+    fireEvent.click(screen.getByRole("button", { name: "Stars" }));
     expect(useTvStore.getState().screens.main.sourceId).toBe("starfield");
-    expect(screen.getByRole("button", { name: "Starfield" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Stars" })).toHaveAttribute("aria-pressed", "true");
     expect(audio.unlock).toHaveBeenCalledTimes(2);
   });
 
@@ -156,6 +156,27 @@ describe("Spectra field guide", () => {
     });
     expect(screen.getByRole("button", { name: "Try preview 1" })).toBeDisabled();
     expect(screen.getByText(/The main screen is off/)).toBeVisible();
+  });
+
+  it("keeps tips optional and frames the picture for the procedural tuning stop", () => {
+    useTvStore.getState().setPower("on");
+    mountGuide();
+    expect(screen.getByRole("button", { name: "Tips" })).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(screen.getByRole("button", { name: "Tips" }));
+    expect(screen.getByText(/Use the buttons as you go/)).toBeVisible();
+    advanceTo(3);
+    expect(screen.getByRole("button", { name: "Tips" })).toHaveAttribute("aria-expanded", "false");
+    expect(useUiStore.getState().cameraPreset).toBe("mainCrt");
+    fireEvent.click(screen.getByRole("button", { name: "Plasma" }));
+    expect(useTvStore.getState().screens.main.sourceId).toBe("weather");
+    fireEvent.click(screen.getByRole("button", { name: "Moiré" }));
+    expect(useTvStore.getState().screens.main.sourceId).toBe("newsroom");
+    fireEvent.click(screen.getByRole("button", { name: /Next/ }));
+    expect(useUiStore.getState().cameraPreset).toBe("front");
+    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    expect(useUiStore.getState().cameraPreset).toBe("mainCrt");
+    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    expect(useUiStore.getState().cameraPreset).toBe("front");
   });
 
   it("closes on standalone Escape without sending the key to the scene", () => {

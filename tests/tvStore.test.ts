@@ -1,6 +1,7 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { useTvStore } from "@/state/tvStore";
 import { SIGNAL_PRESETS, getSignalUniforms } from "@/shaders/crt/signalPresets";
+import { getChannelBankIds, getSourceDef } from "@/systems/media/sourceCatalog";
 
 describe("tvStore transitions", () => {
   beforeEach(() => {
@@ -12,11 +13,22 @@ describe("tvStore transitions", () => {
     expect(useTvStore.getState().power).toBe("starting");
   });
 
+  it("resets to bright procedural demos with the dial aligned to the main source", () => {
+    useTvStore.getState().setPicture({ brightness: 0.2, tuning: 0.1 });
+    useTvStore.getState().setChannelBank(5);
+    useTvStore.getState().reset();
+    const { screens, channelBank, picture } = useTvStore.getState();
+    expect(getChannelBankIds()[channelBank]).toBe(screens.main.sourceId);
+    expect(Object.values(screens).every((screen) => getSourceDef(screen.sourceId)?.kind === "procedural")).toBe(true);
+    expect(picture.brightness).toBe(0.85);
+    expect(picture.tuning).toBe(0.92);
+  });
+
   it("promotes preview and sets transition", () => {
     const ok = useTvStore.getState().promote("preview1");
     expect(ok).toBe(true);
     const s = useTvStore.getState();
-    expect(s.screens.main.sourceId).toBe("smpte");
+    expect(s.screens.main.sourceId).toBe("newsroom");
     expect(s.transitionActive).toBe(true);
   });
 

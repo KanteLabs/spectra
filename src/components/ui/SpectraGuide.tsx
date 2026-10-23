@@ -4,39 +4,42 @@ import { useEffect, useRef, useState } from "react";
 import { useUiStore } from "@/state/uiStore";
 import { useTvStore } from "@/state/tvStore";
 import { getAudioRouter } from "@/systems/media/AudioRouter";
-import { SOURCE_CATALOG } from "@/systems/media/sourceCatalog";
 
 export const GUIDE_SEEN_KEY = "spectra.field-guide.seen.v1";
+
+const PATTERN_LABELS: Record<string, string> = {
+  newsroom: "Moiré", weather: "Plasma", starfield: "Stars", automata: "Cells",
+};
 
 const STEPS = [
   {
     title: "Your own television studio",
-    text: "Meet the 1973 Spectra: one main screen, three previews, and a whole world of signals. Learn the essentials in five short stops.",
-    hint: "Try each control as you go. You can leave and return to the guide at any time.",
+    text: "One main screen. Three previews. Get to know your Spectra in five quick steps.",
+    hint: "Use the buttons as you go, or close the guide to explore. Reopen it from Guide.",
   },
   {
     title: "Bring the picture to life",
-    text: "Press the red dial on the TV to switch it on, or use the power button below. Give the tubes a moment to warm up.",
+    text: "Power on and watch the colorful plasma come to life.",
     hint: "Built-in graphics play with a gentle TV hum. Videos with audio play their soundtrack on the main screen.",
   },
   {
-    title: "Three previews. One program.",
-    text: "The large screen is your main program. Tap any small screen to swap it with the main one. The other previews keep playing, silently.",
-    hint: "Try a preview below. Lock assignments in Controls keeps your chosen arrangement in place.",
+    title: "Swap a preview",
+    text: "Tap a preview to swap it with the main picture.",
+    hint: "You can also tap a small screen on the TV. Previews stay silent. Lock assignments in Controls keeps your arrangement in place.",
   },
   {
-    title: "Find your next signal",
-    text: "Turn the red dial to tune the main screen. Each small dial changes its own preview. Try one of these built-in channels.",
-    hint: "For an exact choice, open Controls → Sources. Every screen has its own source menu.",
+    title: "Play with living patterns",
+    text: "Pick a pattern: flowing plasma, moiré rings, or a star tunnel.",
+    hint: "These patterns are generated live. Turn the red dial to change the main channel; the small dials tune previews. More choices live in Controls → Sources.",
   },
   {
-    title: "Take a closer look",
-    text: "Tap the main screen to move in for a clear view; tap it again to return. You can also use the button below.",
-    hint: "Around the TV: drag to orbit, pinch or scroll to zoom. The front view recenters after a drag. Camera presets in Controls let you inspect other sides.",
+    title: "Find your favorite view",
+    text: "Drag around the TV. Pinch to zoom. Tap the main screen for a close-up.",
+    hint: "Tap the main screen again to return. The front view recenters after a drag. On desktop, scroll to zoom. Controls has more camera presets.",
   },
   {
     title: "Make it your Spectra",
-    text: "You’re ready to explore. Open Controls for picture and sound, individual sources, and a look inside the cabinet.",
+    text: "Add your own media, adjust the picture, or look inside the cabinet in Controls.",
     hint: "Guide is always here when you need a refresher.",
   },
 ] as const;
@@ -82,10 +85,11 @@ export function SpectraGuide({ embedded = false }: { embedded?: boolean }) {
   const highContrast = useUiStore((s) => s.highContrast);
   const power = useTvStore((s) => s.power);
   const locked = useTvStore((s) => s.locked);
-  const mainSource = useTvStore((s) => s.screens.main.sourceId);
-  const mainPowered = useTvStore((s) => s.screens.main.powered);
+  const screens = useTvStore((s) => s.screens);
+  const { sourceId: mainSource, powered: mainPowered } = screens.main;
   const [step, setStep] = useState(0);
   const [feedback, setFeedback] = useState("");
+  const [tipsOpen, setTipsOpen] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const cardRef = useRef<HTMLElement>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
@@ -130,6 +134,7 @@ export function SpectraGuide({ embedded = false }: { embedded?: boolean }) {
 
   useEffect(() => {
     setFeedback("");
+    setTipsOpen(false);
     if (useUiStore.getState().guideOpen) {
       headingRef.current?.focus({ preventScroll: true });
       const body = cardRef.current?.querySelector(".guide-body");
@@ -145,13 +150,28 @@ export function SpectraGuide({ embedded = false }: { embedded?: boolean }) {
   const tryChannel = (id: string) => {
     unlockAudio();
     const changed = useTvStore.getState().assignSource("main", id);
-    setFeedback(changed ? "New signal on the main screen." : "Assignments are locked. Unlock them in Controls to change channels.");
+    setFeedback(changed ? `${PATTERN_LABELS[id] ?? "New signal"} on the main screen.` : "Assignments are locked. Unlock them in Controls to change channels.");
+  };
+
+  const changeStep = (next: number) => {
+    rememberGuide();
+    // The tuning stop needs a readable picture; preview swaps need the whole set.
+    if (next === 3) useUiStore.getState().setMainCrtZoom(true);
+    else if (step === 3 || next === 2) useUiStore.getState().setMainCrtZoom(false);
+    setStep(next);
   };
 
   if (!open || mode === "xr") return null;
   const current = STEPS[step];
-  const sourceLabel = SOURCE_CATALOG.find((source) => source.id === mainSource)?.label ?? "Your media";
   const ready = power === "on";
+  const unavailable = !ready
+    ? "Turn on the TV in the Power step to try this."
+    : !mainPowered
+      ? "The main screen is off. Enable it under Controls → Sources."
+      : locked
+        ? "Assignments are locked. Unlock them in Controls to try this."
+        : "";
+  const status = ((step === 2 || step === 3) && unavailable) || feedback;
 
   return (
     <aside
@@ -173,7 +193,7 @@ export function SpectraGuide({ embedded = false }: { embedded?: boolean }) {
       }}
     >
       <div className="guide-topline">
-        <span className="guide-eyebrow">Spectra · Field guide</span>
+        <span className="guide-eyebrow">Field guide <span className="guide-counter">{step === 0 ? "Start here" : `${step} / 5`}</span></span>
         <button type="button" className="guide-close" aria-label="Close guide" onClick={close}>×</button>
       </div>
       <div className="guide-progress" aria-label={step === 0 ? "Introduction" : `Step ${step} of 5`}>
@@ -210,40 +230,31 @@ export function SpectraGuide({ embedded = false }: { embedded?: boolean }) {
             <button type="button" key={id} disabled={!ready || !mainPowered || locked} onClick={() => {
               unlockAudio();
               const changed = useTvStore.getState().promote(id);
-              setFeedback(changed ? `Preview ${index + 1} and the main screen swapped places.` : "Assignments are locked. Unlock them in Controls to swap screens.");
-            }}>Try preview {index + 1}</button>
+              setFeedback(changed ? `Preview ${index + 1} swapped with main.` : "Assignments are locked. Unlock them in Controls to swap screens.");
+            }} aria-label={`Try preview ${index + 1}`}><span className="guide-preview-number">{index + 1}</span> {PATTERN_LABELS[screens[id].sourceId] ?? "Preview"}</button>
           ))}
         </div>
       )}
       {step === 3 && (
         <div className="guide-try-row">
-          {([["newsroom", "Moiré"], ["starfield", "Starfield"], ["smpte", "Test pattern"]] as const).map(([id, label]) => (
+          {([["weather", "Plasma"], ["newsroom", "Moiré"], ["starfield", "Stars"]] as const).map(([id, label]) => (
             <button type="button" key={id} aria-pressed={mainSource === id} disabled={!ready || !mainPowered || locked} onClick={() => tryChannel(id)}>{label}</button>
           ))}
         </div>
-      )}
-      {(step === 2 || step === 3) && (
-        <p className="guide-current">{!ready ? "Turn on the TV in the Power step to try this." : !mainPowered ? "The main screen is off. Enable it under Controls → Sources." : locked ? "Assignments are locked. Unlock them in Controls to try this." : `Main program: ${sourceLabel}`}</p>
       )}
       {step === 4 && (
         <button type="button" className="guide-action" onClick={() => useUiStore.getState().setMainCrtZoom(cameraPreset !== "mainCrt")}>
           {cameraPreset === "mainCrt" ? "Back to the whole TV" : "View the main screen"}
         </button>
       )}
-      {step === 5 && (
-        <ul className="guide-features">
-          <li><strong>Your media</strong> Add a video or still from your device. It stays in this browser.</li>
-          <li><strong>Picture & sound</strong> Adjust brightness, color, depth, and volume.</li>
-          <li><strong>Inspection & accessibility</strong> Look inside, reduce flicker, or enable reduced motion.</li>
-        </ul>
-      )}
-      <p className="guide-hint">{current.hint}</p>
-      <p className="guide-feedback" role="status" aria-live="polite">{feedback}</p>
+      <p className="guide-feedback" role="status" aria-live="polite">{status}</p>
+      <p id="guide-tips" className="guide-hint" hidden={!tipsOpen}>{current.hint}</p>
       </div>
       <footer className="guide-navigation">
-        {step > 0 ? <button type="button" onClick={() => setStep(step - 1)}>Back</button> : <button type="button" onClick={close}>Explore on my own</button>}
+        {step > 0 ? <button type="button" onClick={() => changeStep(step - 1)}>Back</button> : <button type="button" onClick={close}>Skip guide</button>}
+        <button type="button" className="guide-tips-toggle" aria-expanded={tipsOpen} aria-controls="guide-tips" onClick={() => setTipsOpen(!tipsOpen)}>Tips</button>
         {step < STEPS.length - 1 ? (
-          <button type="button" className="guide-next" onClick={() => { rememberGuide(); setStep(step + 1); }}>{step === 0 ? "Start guide" : "Next"}<span aria-hidden="true"> →</span></button>
+          <button type="button" className="guide-next" onClick={() => changeStep(step + 1)}>{step === 0 ? "Start guide" : "Next"}<span aria-hidden="true"> →</span></button>
         ) : (
           <button type="button" className="guide-next" onClick={() => {
             controlsHandoff.current = cardRef.current?.closest(".app-shell") ?? null;

@@ -43,7 +43,8 @@ Agent-facing contract for Nordmende Spectra. Prefer changing code to match these
 - Pointer/grab cursors on interactive meshes; knobs/sliders use grab/grabbing.
 - Main knob: angular drag with accumulated angle + pointer capture for the full press.
 - Lock switch: bright red + emissive when engaged.
-- DOM picture defaults are product choices (brightness/contrast/sat/tuning); don’t “reset” them casually.
+- The guide keeps each task short, with extra instructions under Tips. Its tuning stop explicitly frames the main CRT; leaving that stop returns to the whole set. On mobile, the compact guide card replaces the quick dock, reserving more space for the TV. Tips reset to closed between stops.
+- Starter channels are plasma (`weather`) on main, then moiré (`newsroom`), stars (`starfield`), and cells (`automata`). Initial/reset `channelBank` must point to the main source. Picture defaults are brightness 0.85, contrast 1.2, saturation 1, tuning 0.92, preview level 0.9; opening the guide must not overwrite picture adjustments.
 
 ## Performance / quality
 

@@ -49,7 +49,9 @@ Drag to orbit, pinch to zoom, and tap a CRT to view/promote it. The bottom bar p
 
 ## Field guide
 
-The first visit opens a short interactive guide covering power, preview swapping, channel tuning, the main-screen view, and personal media. Try the controls directly in each step, or dismiss it and explore. The **Guide** button reopens it at any time. The guide remembers dismissal in this browser and works alongside the TV on desktop, phones, and tablets.
+The first visit opens a short interactive guide covering power, preview swapping, procedural patterns, camera controls, and personal media. Try plasma, moiré, and stars directly in each step. The tuning stop brings the main screen closer, then returns to the whole TV for camera exploration. On phones, a compact card replaces the quick-control bar while guiding; extra instructions live under **Tips**. Dismiss it to explore, and reopen it with **Guide** at any time. Dismissal is remembered in this browser.
+
+The starter screens show plasma, moiré, stars, and cellular animation. Brighter picture defaults and cleaner tuning make these easier to see across the room; adjust them under Picture & Sound.
 
 ## Architecture
 

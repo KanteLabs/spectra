@@ -188,7 +188,12 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0.4rem 0.65rem 0.4rem 1.1rem;
+  flex-shrink: 0;
 }
+
+.guide-counter { margin-left: 0.6rem; color: var(--muted); letter-spacing: 0.04em; }
+.spectra-guide .guide-tips-toggle { border-color: transparent; color: var(--muted); padding-inline: 0.4rem; }
+.guide-preview-number { color: var(--focus); margin-right: 0.2rem; }
 
 .guide-eyebrow,
 .guide-step-label {
@@ -248,7 +253,7 @@ body {
 
 .guide-description { margin: 1rem 0; }
 .guide-hint { color: var(--muted); font-size: 0.8rem; margin: 1rem 0 0; }
-.guide-current, .guide-feedback { color: var(--focus); font-size: 0.78rem; margin: 0.6rem 0 0; }
+.guide-feedback { color: var(--focus); font-size: 0.78rem; margin: 0.6rem 0 0; }
 .guide-feedback:empty { display: none; }
 
 .guide-diagram {
@@ -279,9 +284,6 @@ body {
 .guide-try-row button[aria-pressed="true"] { border-color: var(--focus); color: var(--focus); }
 .spectra-guide button:disabled { opacity: 0.6; cursor: default; }
 .guide-action { width: 100%; }
-.guide-features { padding-left: 1.2rem; font-size: 0.82rem; }
-.guide-features li + li { margin-top: 0.6rem; }
-.guide-features strong { color: var(--focus); }
 
 .guide-navigation {
   display: flex;
@@ -572,6 +574,7 @@ input:focus-visible {
     --dock-height: calc(72px + env(safe-area-inset-bottom));
     --header-height: calc(70px + env(safe-area-inset-top));
     --sheet-height: min(52%, 560px);
+    --guide-height: clamp(250px, 30%, 265px);
   }
   .hud {
     top: calc(1rem + env(safe-area-inset-top));
@@ -598,21 +601,27 @@ input:focus-visible {
   }
   .guide-open .scene-viewport {
     left: 0;
-    bottom: calc(var(--dock-height) + var(--sheet-height));
+    bottom: calc(var(--guide-height) + env(safe-area-inset-bottom));
   }
   .spectra-guide {
     left: 0;
-    bottom: var(--dock-height);
+    bottom: 0;
     width: 100%;
-    height: var(--sheet-height);
-    max-height: calc(100% - var(--dock-height) - var(--header-height));
+    height: calc(var(--guide-height) + env(safe-area-inset-bottom));
+    max-height: calc(100% - var(--header-height) - 150px);
     border-radius: 12px 12px 0 0;
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
   }
-  .spectra-guide h2 { font-size: 1.15rem; }
-  .guide-body { padding: 0.8rem 1rem; }
-  .guide-navigation { padding: 0.65rem 1rem; }
+  .spectra-guide h2 { font-size: 1.05rem; }
+  .guide-diagram, .guide-step-label, .guide-progress { display: none; }
+  .guide-topline { padding: 0 0.5rem 0 1rem; }
+  .guide-body { padding: 0 1rem; font-size: 0.85rem; line-height: 1.4; }
+  .guide-description { margin: 0.45rem 0 0.65rem; }
+  .guide-navigation { padding: 0.4rem 1rem; }
+  .guide-feedback { font-size: 0.75rem; margin-top: 0.35rem; }
+  .guide-open .control-dock { display: none; }
   .guide-toggle { padding: 0.45rem 0.6rem; font-size: 0.8rem; }
   .guide-toggle > span { display: none; }
   .hud-actions { gap: 0.3rem; }
@@ -721,7 +730,7 @@ input:focus-visible {
     right: var(--side-width);
   }
   .guide-open .scene-viewport {
-    bottom: var(--dock-height);
+    bottom: 0;
     right: var(--side-width);
   }
   .spectra-guide {

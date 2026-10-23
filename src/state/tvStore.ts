@@ -19,10 +19,10 @@ import { emit } from "@/state/events";
 import { getChannelBankIds } from "@/systems/media/sourceCatalog";
 
 const DEFAULT_SOURCES = {
-  main: "variety",
-  preview1: "smpte",
-  preview2: "productOrbit",
-  preview3: "newsroom",
+  main: "weather",
+  preview1: "newsroom",
+  preview2: "starfield",
+  preview3: "automata",
 };
 
 /** After main source changes, load media then attach program audio. */
@@ -75,12 +75,12 @@ export interface TvStore extends RoutingState {
 const initialRouting = createDefaultRouting(DEFAULT_SOURCES);
 
 const initialPicture: PictureControls = {
-  brightness: 0.6,
+  brightness: 0.85,
   contrast: 1.2,
   saturation: 1,
-  tuning: 0.5,
+  tuning: 0.92,
   volume: 0.6,
-  previewLevel: 0.8,
+  previewLevel: 0.9,
 };
 
 export const useTvStore = create<TvStore>((set, get) => ({
@@ -90,7 +90,7 @@ export const useTvStore = create<TvStore>((set, get) => ({
   picture: initialPicture,
   selectedControlId: null,
   transitionActive: false,
-  channelBank: 0,
+  channelBank: getChannelBankIds().indexOf(DEFAULT_SOURCES.main),
   audioUnlocked: false,
 
   setPower: (power) => {
@@ -264,7 +264,7 @@ export const useTvStore = create<TvStore>((set, get) => ({
       picture: initialPicture,
       selectedControlId: null,
       transitionActive: false,
-      channelBank: 0,
+      channelBank: getChannelBankIds().indexOf(DEFAULT_SOURCES.main),
     });
     emit({ type: "announce", message: "Experience reset" });
   },
