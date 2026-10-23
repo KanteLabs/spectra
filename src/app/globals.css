@@ -45,6 +45,18 @@ body {
 
 .scene-viewport canvas {
   touch-action: none;
+  -webkit-user-drag: none;
+}
+
+/* Keep touch gestures on the TV from starting Safari's text selection/callout. */
+.scene-viewport,
+.scene-viewport *,
+.hud,
+.touch-hint,
+.control-dock {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .touch-hint,
